@@ -42,8 +42,9 @@ async function run() {
     // await client.connect();
     const db = client.db("parcel");
     const users = db.collection("users");
+    const parcels = db.collection("parcels");
 
-    // APIs ===============
+    // ============== User related APIs ===============
     // API for save user data
     app.put('/saveUser', async (req, res) => {
       // const email = req.params.email;
@@ -72,11 +73,6 @@ async function run() {
         }, options);
         return res.send(result);
       });
-    // app.post('/saveUser', async (req, res) => {
-    //   const user = req.body;
-    //   const result = await users.insertOne(user);
-    //   res.send(result);
-    // });
 
     // API for finding a specific user
     app.get('/users/:email', async (req, res) => {
@@ -86,6 +82,13 @@ async function run() {
       res.send(result);
     });
     
+    // ================ Parcel Related APIs ==================
+    // API for collecting new parcel data
+    app.post('/addParcel', async (req, res) => {
+      const parcel = req.body;
+      const result = await parcels.insertOne(parcel);
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({
