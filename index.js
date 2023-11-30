@@ -16,14 +16,14 @@ app.use((req, res, next) => {
   res.setHeader('Content-Security-Policy', "default-src 'none'; img-src 'self' data:");
   next();
 });
-const corsConfig = {
+const corsOptions = {
   origin: '*',
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE']
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
 };
 
-app.use(cors(corsConfig))
-app.options("", cors(corsConfig))
+app.use(cors(corsOptions))
+app.options("", cors(corsOptions))
 
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -39,11 +39,52 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    // client.connect();
+    // await client.connect();
     const db = client.db("parcel");
     const users = db.collection("users");
 
+    // APIs ===============
+    // API for save user data
+    app.put('/saveUser', async (req, res) => {
+      // const email = req.params.email;
+      const user = req.body;
+      console.log(user);
+      const query = {email: user.email};
+      const options = {upsert: true};
+      const isExist = await users.findOne(query);
+      if (!isExist) {
+       const result = await users.insertOne(user);
+        return res.send(result);
+      } else {
+        const result = await users.updateOne(query,{
+          $set: {...user, timestamp: Date.mow()}
+        }, options);
+        return res.send(result);
+      }
+    });
+    
+    app.patch('/beDeliveryMen/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = {email: email};
+      const options = {upsert: true};
+        const result = await users.updateOne(query,{
+          $set: {role: 'deliveryman'}
+        }, options);
+        return res.send(result);
+      });
+    // app.post('/saveUser', async (req, res) => {
+    //   const user = req.body;
+    //   const result = await users.insertOne(user);
+    //   res.send(result);
+    // });
 
+    // API for finding a specific user
+    app.get('/users/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = {email: email};
+      const result = await users.findOne(query);
+      res.send(result);
+    });
     
 
     // Send a ping to confirm a successful connection
