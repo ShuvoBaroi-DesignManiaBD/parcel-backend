@@ -74,6 +74,13 @@ async function run() {
         return res.send(result);
       });
 
+    // API for getting all users data
+    app.get('/users', async (req, res) => {
+      const cursor = users.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });  
+
     // API for finding a specific user
     app.get('/users/:email', async (req, res) => {
       const email = req.params.email;
