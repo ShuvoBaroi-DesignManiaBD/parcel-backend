@@ -76,9 +76,14 @@ async function run() {
 
     // API for getting all users data
     app.get('/users', async (req, res) => {
-      const cursor = users.find();
-      const result = await cursor.toArray();
-      res.send(result);
+      const page = req.query.page;
+      const pageNumber = parseInt(page);
+      const perPage = 5;
+      const skip = pageNumber * perPage;
+      const cursor = await users.find();
+      const allUsers = await cursor.skip(skip).limit(perPage).toArray();
+      const usersCount = await users.countDocuments();
+      res.send({allUsers, usersCount});
     });  
 
     // API for finding a specific user
