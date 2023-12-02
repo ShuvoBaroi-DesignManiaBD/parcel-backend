@@ -88,7 +88,18 @@ async function run() {
       const result = await users.findOne(query);
       res.send(result);
     });
-    
+
+    app.patch('/changeRole/:email', async (req, res) => {
+      const email = req.params.email;
+      const data = req.body;
+      console.log(data);
+      const query = {email: email};
+      const options = {upsert: true};
+        const result = await users.updateOne(query,{
+          $set: {role: data.role}
+        }, options);
+        return res.send(result);
+      });
     // ================ Parcel Related APIs ==================
     // API for collecting new parcel data
     app.post('/addParcel', async (req, res) => {
