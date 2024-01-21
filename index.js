@@ -64,6 +64,7 @@ async function run() {
       }
     });
     
+    // ========= DeliveryMan related APIs ========
     app.patch('/beDeliveryMen/:email', async (req, res) => {
       const email = req.params.email;
       const query = {email: email};
@@ -73,6 +74,26 @@ async function run() {
         }, options);
         return res.send(result);
       });
+
+    // API for getting all DeliveryMen
+    app.get('/allDeliveryMan', async (req, res) => {
+      const page = req?.query?.page;
+
+      const query = {role: 'deliveryman'};
+      const result = await users.find(query);
+      if (page) {
+        const pageNumber = parseInt(page);
+        const perPage = 5;
+        const skip = pageNumber * perPage;
+        const deliveryMen = await result.skip(skip).limit(perPage).toArray();
+      const count = await users.countDocuments(query);
+      res.send({deliveryMen, count});
+      } else {
+        const list = await result.toArray();
+        res.send(list);
+      }
+      
+    });
 
     // API for getting all users data
     app.get('/users', async (req, res) => {
@@ -100,18 +121,83 @@ async function run() {
       console.log(data);
       const query = {email: email};
       const options = {upsert: true};
-        const result = await users.updateOne(query,{
+      const result = await users.updateOne(query,{
           $set: {role: data.role}
         }, options);
         return res.send(result);
       });
     // ================ Parcel Related APIs ==================
-    // API for collecting new parcel data
+    // API for collecting new parcel data to database
     app.post('/addParcel', async (req, res) => {
       const parcel = req.body;
+      const email = parcel.email;
+      const price = parcel.price;
+      const phone = parcel.phone;
+      const query = {email: email};
+      const options = {upsert: true};
+      const user = await users.findOne(query);
+      const updateUser = await users.updateOne(query,{
+          $set: {parcelBooked: user?.parcelBooked? user?.parcelBooked + 1 : 1,
+          totalSpent: user?.totalSpent ? user.totalSpent + price : price,
+          phone: user?.phone ? user.phone : phone,
+          }
+        }, options);
       const result = await parcels.insertOne(parcel);
-      res.send(result);
+
+      res.send({result, updateUser});
     });
+
+    // API for updating a parcel data
+    app.put('/updateParcel', async (req, res) => {
+      const parcel = req.body;
+      const id = req.query.id;
+      const query = {_id: new ObjectId(id)};
+      const options = {upsert: true};
+      // const oldParcel = await parcels.findOne(query);
+      const updateParcel = await parcels.updateOne(query,{
+          $set: {...parcel}
+        }, options);
+      res.send(updateParcel);
+    });
+
+    app.patch('/cancelParcel', async (req, res) => {
+      const id = req.query.id;
+      const query = {_id: new ObjectId(id)};
+      const options = {upsert: true};
+      const result = await parcels.updateOne(query,{
+          $set: {status: 'canceled'},
+        }, options);
+        return res.send(result);
+      });
+
+    // API for getting the parcels of a user
+    app.get('/getParcels', async (req, res) => {
+      const email = req.query.email;
+      const page = req.query.page;
+      const pageNumber = parseInt(page);
+      const perPage = 5;
+      const skip = pageNumber * perPage;
+      const query = {email: email};
+      // const cursor = await parcels.find(query);
+      const allParcels = parcels.find(query).toArray();
+      const currentPageItems = await parcels.find(query).skip(skip).limit(perPage).toArray();
+      const parcelsCount = await parcels.countDocuments(query);
+      console.log(allParcels, parcelsCount);
+      res.send({currentPageItems, parcelsCount});
+    });
+
+    // API for getting all users data
+    app.get('/allParcels', async (req, res) => {
+      const page = req.query.page;
+      const pageNumber = parseInt(page);
+      const perPage = 5;
+      const skip = pageNumber * perPage;
+      const cursor = await parcels.find();
+      const allParcels = await cursor.skip(skip).limit(perPage).toArray();
+      const parcelsCount = await parcels.countDocuments();
+      res.send({allParcels, parcelsCount});
+    });
+    
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({
