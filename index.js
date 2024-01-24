@@ -50,7 +50,7 @@ async function run() {
       // const email = req.params.email;
       const user = req.body;
       console.log(user);
-      const query = {email: user.email};
+      const query = {email: user?.email};
       const options = {upsert: true};
       const isExist = await users.findOne(query);
       if (!isExist) {
@@ -58,13 +58,14 @@ async function run() {
         return res.send(result);
       } else {
         const result = await users.updateOne(query,{
-          $set: {...user, timestamp: Date.mow()}
+          $set: {...user, timestamp: Date.now()}
         }, options);
         return res.send(result);
       }
     });
     
     // ========= DeliveryMan related APIs ========
+    // API for be a delivery man
     app.patch('/beDeliveryMen/:email', async (req, res) => {
       const email = req.params.email;
       const query = {email: email};
@@ -74,6 +75,14 @@ async function run() {
         }, options);
         return res.send(result);
       });
+
+    // API for finding a specific deliveryman
+    app.get('/deliveryman/:id', async (req, res) => {
+      const id = req.params.id;
+      const queryById = {_id: new ObjectId(id)};
+      const result = await users.findOne(queryById)
+      res.send(result);
+    });
 
     // API for getting all DeliveryMen
     app.get('/allDeliveryMan', async (req, res) => {
@@ -144,28 +153,33 @@ async function run() {
         }, options);
       const result = await parcels.insertOne(parcel);
 
-      res.send({result, updateUser});
+      res.send({result, updateUser})
     });
 
     // API for updating a parcel data
     app.put('/updateParcel', async (req, res) => {
-      const parcel = req.body;
-      const id = req.query.id;
-      const query = {_id: new ObjectId(id)};
-      const options = {upsert: true};
+      try{
+        const parcel = req.body;
+        const Id = req.query.id;
+        console.log(parcel, Id);
+      const query = {_id: new ObjectId(Id)};
+      // const options = {upsert: true};
       // const oldParcel = await parcels.findOne(query);
       const updateParcel = await parcels.updateOne(query,{
           $set: {...parcel}
-        }, options);
+        });
       res.send(updateParcel);
-    });
+      } catch (err) {
+        console.log(err);
+      }})
+      
 
     app.patch('/cancelParcel', async (req, res) => {
       const id = req.query.id;
       const query = {_id: new ObjectId(id)};
       const options = {upsert: true};
       const result = await parcels.updateOne(query,{
-          $set: {status: 'canceled'},
+          $set: {status: 'Canceled'},
         }, options);
         return res.send(result);
       });
