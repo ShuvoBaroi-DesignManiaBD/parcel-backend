@@ -185,7 +185,20 @@ async function run() {
         return res.send(result);
       });
       
-      
+    // API for changing a parcel's booking status
+    app.put('/change-parcel-status', async (req, res) => {
+        try{
+          const Id = req.query.id;
+          const newStatus = req.query.status;
+          console.log(Id, newStatus);
+        const query = {_id: new ObjectId(Id)};
+        const updateParcel = await parcels.updateOne(query,{
+            $set: {status: newStatus}
+          });
+        res.send(updateParcel);
+        } catch (err) {
+          console.log(err);
+    }})
 
     // API for getting the parcels of a user
     app.get('/getParcels', async (req, res) => {
