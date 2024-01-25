@@ -43,6 +43,7 @@ async function run() {
     const db = client.db("parcel");
     const users = db.collection("users");
     const parcels = db.collection("parcels");
+    const reviews = db.collection("reviews");
 
     // ============== User related APIs ===============
     // API for save user data
@@ -173,7 +174,7 @@ async function run() {
         console.log(err);
       }})
       
-
+      // API for canceling a parcel data
     app.patch('/cancelParcel', async (req, res) => {
       const id = req.query.id;
       const query = {_id: new ObjectId(id)};
@@ -183,6 +184,8 @@ async function run() {
         }, options);
         return res.send(result);
       });
+      
+      
 
     // API for getting the parcels of a user
     app.get('/getParcels', async (req, res) => {
@@ -211,7 +214,14 @@ async function run() {
       const parcelsCount = await parcels.countDocuments();
       res.send({allParcels, parcelsCount});
     });
-    
+
+    // ============= Reviews API ===============
+    // ===== API for adding a review
+    app.post('/addreview', async (req, res) => {
+      const review = req.body;
+      const result = await reviews.insertOne(review);
+      res.send(result)
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({
