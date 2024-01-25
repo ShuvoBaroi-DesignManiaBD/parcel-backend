@@ -174,7 +174,7 @@ async function run() {
         console.log(err);
       }})
       
-      // API for canceling a parcel data
+    // API for canceling a parcel data
     app.patch('/cancelParcel', async (req, res) => {
       const id = req.query.id;
       const query = {_id: new ObjectId(id)};
@@ -216,6 +216,22 @@ async function run() {
       res.send({currentPageItems, parcelsCount});
     });
 
+    // API for getting the parcels of a user
+    app.get('/get-delivery-list', async (req, res) => {
+      const id = req.query.id;
+      const page = req.query.page;
+      const pageNumber = parseInt(page);
+      const perPage = 5;
+      const skip = pageNumber * perPage;
+      const query = {_id: new ObjectId(id)};
+      // const cursor = await parcels.find(query);
+      const allParcels = parcels.find(query).toArray();
+      const currentPageItems = await parcels.find(query).skip(skip).limit(perPage).toArray();
+      const parcelsCount = await parcels.countDocuments(query);
+      console.log(allParcels, parcelsCount);
+      res.send({currentPageItems, parcelsCount});
+    });
+
     // API for getting all users data
     app.get('/allParcels', async (req, res) => {
       const page = req.query.page;
@@ -237,7 +253,7 @@ async function run() {
     });
 
     // ===== API for getting a specific review data
-    app.post('/get-review', async (req, res) => {
+    app.get('/get-review', async (req, res) => {
       const id = req.query.id;
       const query = {parcelId: id};
       const review = await reviews.findOne(query);
