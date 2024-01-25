@@ -223,6 +223,14 @@ async function run() {
       res.send(result)
     });
 
+    // ===== API for getting a specific review data
+    app.post('/get-review', async (req, res) => {
+      const id = req.query.id;
+      const query = {parcelId: id};
+      const review = await reviews.findOne(query);
+      res.send(review)
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({
       ping: 1
